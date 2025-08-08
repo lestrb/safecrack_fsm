@@ -2,11 +2,11 @@ module safecrackpro_beta_fsm (
     input  logic       clk,        // clock
     input  logic       rst,        // reset
     input  logic       ms,         // mudança de senha
+    input  logic       trava, 
     input  logic [3:0] btn,        // buttons inputs (BTN[3:0])
     output logic       unlocked    // output: 1 when the safe is unlocked
-    output logic       first       // output: 1 quando tiver errado uma vez
-    output logic       second      // output: 1 quando tiver errado duas vezes
-    output logic       third       // output: 1 quando tiver errado três vezes
+    output logic [2:0] leds_erros  // output: 1 quando tiver errado uma vez
+    output logic [9:0] leds_segundos;      
 );
 
     // one-hot encoding  ---- criar estados diferentes para a troca de senhas aqui
@@ -30,16 +30,28 @@ module safecrackpro_beta_fsm (
     logic [3:0] passcode[2:0]; // armazena o codigo (registrador) -> vai precisar de uma logic pra armazenar o tempo e a qtd de erros
     logic [1:0] qtd_erros;     // armazena a quantidade de erros (será zerada no reset)
     logic tentativa_incorreta;
-    // criar essas pra armazenar tempo 
+    logic [1:0] segundos; // como vamos usar decimal, precisa somente de 2 bits
     
     // state transition -> depende do clock
     always_ff @(posedge clk) begin
-        if (rst) begin // reseta
+        if (trava) begin // trata o contador de tempo
+            if (segundos < 4'd10) begin
+                segundos <= segundos + 1;    // soma mais 1
+                leds_segundos[segundos] <= 1'b1; // acende LED correspondente
+            end
+            else begin
+                segundos <= 2'd0;            // volta a 0 quando passar de 10
+                state <= S0;                 // reseta estado pra S0 depois de travar por 10s
+            end
+        end
+        else if (rst) begin // reseta
             state <= S0;
             passcode[0] <= 4'b0111;
             passcode[1] <= 4'b1101;
             passcode[2] <= 4'b1101;
             qtd_erros <= 2'b00;          // zera contador de erros
+            segundos <= 2'd0;            // zera contador de segundos
+            leds_segundos <= 10'b00_0000_0000; // desliga leds dos segundos
         end
         else if (ms) begin
             state <= MS0;
@@ -68,6 +80,7 @@ module safecrackpro_beta_fsm (
             MS1:    next = (btn) ? MS2 : MS1;
             MS2:    next = (btn) ? S0 : MS2;
             ERRO:  // FAZER TRATATIVA DE QUANDO FOR ERRO
+                CONT:  // FAZER TRATATIVA DE QUANDO CHEGAREM 3 ERROS E FOR PRO ESTADO DE CONT (contar os 10seg)
             default: next = S0; // caso não seja nenhum dos estados previstos
         endcase
     end
@@ -75,9 +88,9 @@ module safecrackpro_beta_fsm (
     // output logic -> combinacional (atualisa saída)
     always_comb begin
         unlocked = (state == S3); // pergunta se estado é igual a S3 (se sim, unlocked = 1 / se não, unlocked = 0)
-        first = (qtd_erros == 2'b01);     // se a qtd_erros for 1, first == 1, vamos colocar pra acender led vermelha
-        second = (qtd_erros == 2'b10);
-        third = (qtd_erros == 2'b11);
+        leds_erros[0] = (qtd_erros == 2'b01);     // se a qtd_erros for 1, first == 1, vamos colocar pra acender led vermelha
+        leds_erros[1] = (qtd_erros == 2'b10);
+        leds_erros[2] = (qtd_erros == 2'b11);
     end
 
 endmodule
