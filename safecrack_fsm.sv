@@ -77,7 +77,7 @@ module safecrackpro_beta_fsm (
             S2:    next = (btn == passcode[2]) ? S3 : ERRO;
             S3:    next = (ms) ? MS0 : S3; // se ms for 1 (switch pra cima), muda de estado ---- CHECAR SE ESSE JEITO DE COMPARAR TÁ CERTO
             MS0:    next = (btn) ? MS1 : MS0; // se qualquer botão for 1 (pressionado), muda de estado  ---- CHECAR SE BOTÃO PRESSIONADO É 0 OU 1
-            MS1:    next = (btn) ? MS2 : MS1;
+            MS1:    next = (btn) ? MS2 : MS1; // falta armazenar o botão pressionado ---- VER COMO FAZER
             MS2:    next = (btn) ? S0 : MS2;
             ERRO:  // FAZER TRATATIVA DE QUANDO FOR ERRO
                 CONT:  // FAZER TRATATIVA DE QUANDO CHEGAREM 3 ERROS E FOR PRO ESTADO DE CONT (contar os 10seg)
