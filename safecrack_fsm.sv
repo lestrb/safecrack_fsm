@@ -10,16 +10,16 @@ module safecrackpro_beta_fsm (
 );
 
     // one-hot encoding  ---- criar estados diferentes para a troca de senhas aqui
-    typedef enum logic [3:0] { // typedef -> estados da maquina
+    typedef enum logic [9:0] { // typedef -> estados da maquina
         S0 = 9'b0_0000_0001,  // initial state
         S1 = 9'b0_0000_0010,  // BTN = 1 right
         S2 = 9'b0_0000_0100,  // BTN = 2 right
         S3 = 9'b0_0000_1000,  // BTN = 3 right → unlock
-        MS0 = 9'b0_0000_0000, // CHECAR QUAIS SERIAM OS 1 EM CADA NOVO ESTADO DAQUI PRA BAIXO
-        MS1 = 9'b0_0000_0000,
-        MS2 = 9'b0_0000_0000,
-        ERRO = 9'b0_0000_0000,
-        CONT = 9'b0_0000_0000
+        MS0 = 9'b0_0001_0000, // CHECAR QUAIS SERIAM OS 1 EM CADA NOVO ESTADO DAQUI PRA BAIXO
+        MS1 = 9'b0_0010_0000,
+        MS2 = 9'b0_0100_0000,
+        ERRO = 9'b0_1000_0000,
+        CONT = 9'b1_0000_0000
 // ex: S4 = 5'b10000
 // muda os S0, S1, S2 e S3 pra S3 = 5'b01000,
 // o ultimo sem virgula
