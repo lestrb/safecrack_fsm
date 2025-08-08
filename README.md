@@ -1,4 +1,4 @@
-# 🔐 SafeCrackPro Beta FSM
+# 🔐 SafeCrack FSM
 
 Projeto de uma **máquina de estados finita (FSM)** em **SystemVerilog** para simular um cofre eletrônico.  
 O sistema valida uma senha pré-definida, conta erros e acertos, permite alteração de senha e aplica um tempo de bloqueio após tentativas incorretas.
