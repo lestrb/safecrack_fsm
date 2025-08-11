@@ -1,4 +1,4 @@
-module safecrackpro_beta_fsm (
+module safecrack_fsm (
     input  logic       clk,            // clock
     input  logic       rst,            // reset
     input  logic       ms,             // mudança de senha 
@@ -10,7 +10,7 @@ module safecrackpro_beta_fsm (
 );
 
     // one-hot encoding | criação de estados
-    typedef enum logic [9:0] { 
+    typedef enum logic [8:0] { 
         S0   = 9'b0_0000_0001,   // estado inicial
         S1   = 9'b0_0000_0010,   // BTN = 1 right
         S2   = 9'b0_0000_0100,   // BTN = 2 right
