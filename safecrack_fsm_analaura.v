@@ -47,7 +47,9 @@ module safecrack_fsm (
             state_before_error <= S0;  // estado inicial antes de erro
             ms_index <= 2'd0;          // índice de mudança de senha
 				div_count <= 26'd0;
-				one_hz <= 1'd0;
+				one_hz <= 1'b0;
+				segundos <= 0;
+				leds_segundos <= 0;
         end
         else if (state == CONT) begin             // estado de bloqueio: contar até 10 segundos
 				if (div_count == 50_000_000 - 1) begin
@@ -63,16 +65,16 @@ module safecrack_fsm (
 					 segundos <= segundos + 1;
 					 leds_segundos <= (10'b1 << (segundos + 1)) - 1; // acende LEDs progressivamente
 				end
-        end
-		  else if (state != CONT) begin // AJUSTAR ISSO ------
+        end else begin
 				div_count <= 26'd0;  // reseta divisor se não estiver em CONT (pode ajustar conforme quiser)
 				one_hz <= 1'b0;
 				segundos <= 0;
 				leds_segundos <= 0;
 		  end
-        
-        else if (ms) begin          // início do modo de mudança de senha
-            if (state == MS0) begin // captura apenas quando houver um botão válido (4'b1111 representa "nenhum botão pressionado")
+		  
+        // início do modo de mudança de senha
+        if (ms) begin          
+				if (state == MS0) begin // captura apenas quando houver um botão válido (4'b1111 representa "nenhum botão pressionado")
                 // Zera tudo que tem que zerar no MS0 (não zera erros porque já foi zerado no S3)
                 qtd_acertos <= 2'b00;      // zera acertos
                 segundos <= 4'd0;          // zera contador de segundos
