@@ -107,13 +107,7 @@ module safecrack_fsm (
             MS0:   next = (btn != 4'b1111) ? MS1 : MS0;      // espera botão válido
             MS1:   next = (btn != 4'b1111) ? MS2 : MS1;      // espera botão válido
             MS2:   next = (btn != 4'b1111) ? S0  : MS2;      // espera botão válido
-            // ERRO:  next = (qtd_erros >= 3) ? CONT : state_before_error;  // se 3 erros, bloqueia. Se não, volta ao estado antes do erro
-            // CHECAR SE SERIA ASSIM OU NAO
-            ERRO: begin
-                if (qtd_erros >= 3)       next = CONT;               // se 3 erros → bloqueia
-                else if (btn == 4'b1111)  next = state_before_error; // volta ao estado antes do erro
-                else                      next = ERRO;               // mantém erro enquanto botão pressionado
-            end
+            ERRO:  next = (qtd_erros >= 3) ? CONT : state_before_error;  // se 3 erros, bloqueia. Se não, volta ao estado antes do erro
             CONT:  next = (segundos >= 4'd10) ? S0 : CONT;    // espera 10 segundos
             default: next = S0;
         endcase
@@ -134,3 +128,4 @@ module safecrack_fsm (
         leds_acertos[2] = (qtd_acertos >= 2'b11);
     end
 endmodule
+
