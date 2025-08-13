@@ -48,8 +48,6 @@ module safecrack_fsm (
             ms_index <= 2'd0;          // índice de mudança de senha
 			div_count <= 26'd0;
 			one_hz <= 1'b0;
-			segundos <= 0;
-			leds_segundos <= 0;
         end
         if (state == CONT) begin             // estado de bloqueio: contar até 10 segundos
 			if (div_count == 50_000_000 - 1) begin
@@ -67,49 +65,38 @@ module safecrack_fsm (
         end else begin
 			div_count <= 26'd0;  // reseta divisor se não estiver em CONT (pode ajustar conforme quiser)
 			one_hz <= 1'b0;
-			segundos <= 0;
-			leds_segundos <= 0;
+			segundos <= 4'd0;
+			leds_segundos <= 10'd0;
 		end
 		
         // início do modo de mudança de senha
         if (ms) begin          
-			if (state == MS0) begin // captura apenas quando houver um botão válido (4'b1111 representa "nenhum botão pressionado")
-                // Zera tudo que tem que zerar no MS0 (não zera erros porque já foi zerado no S3)
-                qtd_acertos <= 2'b00;      // zera acertos
-                segundos <= 4'd0;          // zera contador de segundos
-                leds_segundos <= 10'd0;    // apaga LEDs de segundos
-                state_before_error <= S0;  // estado inicial antes de erro
-                ms_index <= 2'd0;          // índice de mudança de senha
-                
-                if (btn != 4'b1111) begin
-                    passcode[ms_index] <= btn;    // grava primeiro botão
-                    ms_index <= ms_index + 1;     // passa para próximo índice
-                end
-            end else if (state == MS1 || state == MS2) begin
-                if (btn != 4'b1111) begin
+			if (state == MS0 || state == MS1 || state == MS2) begin 
+				if (btn != 4'b1111) begin		  // captura apenas quando houver um botão válido (4'b1111 representa "nenhum botão pressionado")
                     passcode[ms_index] <= btn;    // grava segundo botão
                     ms_index <= ms_index + 1;     // passa para próximo índice
                 end
             end else begin
                 ms_index <= 2'd0;        		  // zera índice caso não esteja no MS0, MS1 ou MS2 
-				end
+			end
 		end
         // novo erro 
         if (next == ERRO && state != ERRO) begin
             state_before_error <= state;            					 // salva estado atual para poder voltar depois
             qtd_erros <= (qtd_erros < 3) ? qtd_erros + 1 : qtd_erros;    // incrementa erros
         end    
-		// Zera erros quando volta ao estado inicial sem estar bloqueado
-		else if (state == ERRO && next == state_before_error && state_before_error == S0) begin
-			qtd_erros <= 2'b00;
-     	end
         // novo acerto 
         else if ((state == S0 && next == S1) || (state == S1 && next == S2) || (state == S2 && next == S3)) begin 
             qtd_acertos <= qtd_acertos + 1;
         end
         // cofre destrancado
-        else if (state == S3) begin
-            qtd_erros <= 2'b00; // zerar erros 
+		else if (state == S3) begin // CHECAR ONDE ZERAR PARA OS LEDS ESTAREM ACESOS COM O COFRE UNLOCKED
+            qtd_erros <= 2'b00; 	   // zerar erros 
+			qtd_acertos <= 2'b00;      // zera acertos
+            segundos <= 4'd0;          // zera contador de segundos
+            leds_segundos <= 10'd0;    // apaga LEDs de segundos
+            state_before_error <= S0;  // estado inicial antes de erro
+            ms_index <= 2'd0;          // índice de mudança de senha
         end
         // atualiza estado
         state <= next;
@@ -163,4 +150,5 @@ module safecrack_fsm (
         leds_acertos[2] = (qtd_acertos >= 2'd3);
     end
 endmodule
+
 
