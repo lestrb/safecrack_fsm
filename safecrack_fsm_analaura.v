@@ -30,8 +30,8 @@ module safecrack_fsm (
     logic [1:0] qtd_acertos;       // armazena a quantidade de acertos (zerada no reset)
     logic [3:0] segundos;          // contador de segundos no bloqueio (0–10)
     logic [1:0] ms_index;          // índice para mudança de senha
-	 logic [25:0] div_count; 		  // 26 bits conseguem contar até 67 milhões
-	 logic        one_hz;           // pulso de 1 Hz
+	logic [25:0] div_count; 		  // 26 bits conseguem contar até 67 milhões
+	logic        one_hz;           // pulso de 1 Hz
 
     // transição de estado e registradores (de acordo com o clock)
     always_ff @(posedge clk) begin     
@@ -46,35 +46,34 @@ module safecrack_fsm (
             leds_segundos <= 10'd0;    // apaga LEDs de segundos
             state_before_error <= S0;  // estado inicial antes de erro
             ms_index <= 2'd0;          // índice de mudança de senha
-				div_count <= 26'd0;
-				one_hz <= 1'b0;
-				segundos <= 0;
-				leds_segundos <= 0;
+			div_count <= 26'd0;
+			one_hz <= 1'b0;
+			segundos <= 0;
+			leds_segundos <= 0;
         end
-        else if (state == CONT) begin             // estado de bloqueio: contar até 10 segundos
-				if (div_count == 50_000_000 - 1) begin
-					div_count <= 0;
-					one_hz <= 1'b1;
-				end
-				else begin
-					div_count <= div_count + 1;
-					one_hz <= 0;
-				end
-				
-				if (one_hz) begin
-					 segundos <= segundos + 1;
-					 leds_segundos <= (10'b1 << (segundos + 1)) - 1; // acende LEDs progressivamente
-				end
+        if (state == CONT) begin             // estado de bloqueio: contar até 10 segundos
+			if (div_count == 50_000_000 - 1) begin
+				div_count <= 0;
+				one_hz <= 1'b1;
+			end
+			else begin
+				div_count <= div_count + 1;
+				one_hz <= 0;
+			end
+			if (one_hz) begin
+				segundos <= segundos + 1;
+				leds_segundos <= (10'b1 << (segundos + 1)) - 1; // acende LEDs progressivamente
+			end
         end else begin
-				div_count <= 26'd0;  // reseta divisor se não estiver em CONT (pode ajustar conforme quiser)
-				one_hz <= 1'b0;
-				segundos <= 0;
-				leds_segundos <= 0;
-		  end
-		  
+			div_count <= 26'd0;  // reseta divisor se não estiver em CONT (pode ajustar conforme quiser)
+			one_hz <= 1'b0;
+			segundos <= 0;
+			leds_segundos <= 0;
+		end
+		
         // início do modo de mudança de senha
         if (ms) begin          
-				if (state == MS0) begin // captura apenas quando houver um botão válido (4'b1111 representa "nenhum botão pressionado")
+			if (state == MS0) begin // captura apenas quando houver um botão válido (4'b1111 representa "nenhum botão pressionado")
                 // Zera tudo que tem que zerar no MS0 (não zera erros porque já foi zerado no S3)
                 qtd_acertos <= 2'b00;      // zera acertos
                 segundos <= 4'd0;          // zera contador de segundos
@@ -92,18 +91,18 @@ module safecrack_fsm (
                     ms_index <= ms_index + 1;     // passa para próximo índice
                 end
             end else begin
-                ms_index <= 2'd0;        	 // zera índice caso não esteja no MS0, MS1 ou MS2 
+                ms_index <= 2'd0;        		  // zera índice caso não esteja no MS0, MS1 ou MS2 
 				end
-		  end
+		end
         // novo erro 
-        else if (next == ERRO && state != ERRO) begin
-            state_before_error <= state;            							 // salva estado atual para poder voltar depois
+        if (next == ERRO && state != ERRO) begin
+            state_before_error <= state;            					 // salva estado atual para poder voltar depois
             qtd_erros <= (qtd_erros < 3) ? qtd_erros + 1 : qtd_erros;    // incrementa erros
         end    
-		  // Zera erros quando volta ao estado inicial sem estar bloqueado
-		  else if (state == ERRO && next == state_before_error && state_before_error == S0) begin
-				qtd_erros <= 2'b00;
-		  end
+		// Zera erros quando volta ao estado inicial sem estar bloqueado
+		else if (state == ERRO && next == state_before_error && state_before_error == S0) begin
+			qtd_erros <= 2'b00;
+     	end
         // novo acerto 
         else if ((state == S0 && next == S1) || (state == S1 && next == S2) || (state == S2 && next == S3)) begin 
             qtd_acertos <= qtd_acertos + 1;
@@ -121,29 +120,29 @@ module safecrack_fsm (
         next = state; // valor padrão do próximo estado
         case (state) 
             S0:	 begin  
-							 if (btn == 4'b1111)           next = S0; 	 // se não tem botão pressionado, fica em S0
-							 else if (btn == passcode[0])  next = S1;     // se acertar o botão, vai pro próximo estado
-							 else								    next = ERRO;   // se não acertar botão, vai pra ERRO
-						 end
+					   if (btn == 4'b1111)           next = S0; 	// se não tem botão pressionado, fica em S0
+					   else if (btn == passcode[0])  next = S1;     // se acertar o botão, vai pro próximo estado
+					   else						     next = ERRO;   // se não acertar botão, vai pra ERRO
+				   end
             S1:    begin  
-							 if (btn == 4'b1111)           next = S1; 	 // se não tem botão pressionado, fica em S1
-							 else if (btn == passcode[1])  next = S2;     // se acertar o botão, vai pro próximo estado
-							 else							       next = ERRO;   // se não acertar botão, vai pra ERRO
-						 end
+					   if (btn == 4'b1111)           next = S1; 	// se não tem botão pressionado, fica em S1
+					   else if (btn == passcode[1])  next = S2;     // se acertar o botão, vai pro próximo estado
+					   else							 next = ERRO;   // se não acertar botão, vai pra ERRO
+				   end
             S2:    begin  
-							 if (btn == 4'b1111)           next = S2; 	 // se não tem botão pressionado, fica em S2
-							 else if (btn == passcode[2])  next = S3;     // se acertar o botão, vai pro próximo estado
-							 else							       next = ERRO;   // se não acertar botão, vai pra ERRO
-						 end
+					   if (btn == 4'b1111)           next = S2; 	// se não tem botão pressionado, fica em S2
+					   else if (btn == passcode[2])  next = S3;     // se acertar o botão, vai pro próximo estado
+			     	   else							 next = ERRO;   // se não acertar botão, vai pra ERRO
+				   end
             S3:    next = (ms) ? MS0 : S3;                   // se ms ativo, vai pra estado de mudança de senha / se não, fica em S3 (unlocked)
             MS0:   next = (btn != 4'b1111) ? MS1 : MS0;      // espera botão válido
             MS1:   next = (btn != 4'b1111) ? MS2 : MS1;      // espera botão válido
             MS2:   next = (btn != 4'b1111) ? S0  : MS2;      // espera botão válido
             ERRO:  begin  
-							 if (btn == 4'b1111)       next = ERRO; // se 3 erros → bloqueia
-							 else if (qtd_erros >= 3)  next = CONT; // volta ao estado antes do erro
-							 else								next = state_before_error; // mantém erro enquanto botão pressionado
-						 end
+					   if (btn == 4'b1111)       next = ERRO; 		         // se não tem botão pressionado, fica em ERRO
+					   else if (qtd_erros >= 3)  next = CONT;         		 // se chegar em 3 erros, vai pro estado CONT
+					   else				         next = state_before_error;  // mantém erro enquanto botão pressionado
+				   end
             CONT:  next = (segundos >= 4'd10) ? S0 : CONT;   // espera 10 segundos
             default: next = S0;
         endcase
@@ -164,3 +163,4 @@ module safecrack_fsm (
         leds_acertos[2] = (qtd_acertos >= 2'd3);
     end
 endmodule
+
